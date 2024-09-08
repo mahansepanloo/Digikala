@@ -1,15 +1,11 @@
 from django.urls import path
-from accounts.views import *
+from .views import Login, Refresh, Costomer, SellerListView, FindCostumerByNameView, FindSellerByNameView
 
 urlpatterns = [
-    path('login', Login),
-    path('Refresh', Refresh),
-
-    path('costumers', costumers_list_func),
-    path('sellers', sellers_list_func),
-    path('costumers/<str:input_name>', find_costumers_by_name),
-    path('sellers/<str:input_name>', find_sellers_by_name),
-    path('costumers/find_costumers_by_username/<str:input_username>', find_costumers_by_username),
-    path('sellers/find_sellers_by_username/<str:input_username>', find_sellers_by_username),
-    path('add_seller', add_seller),
-    path('add_costumer', add_costumer),]
+    path('api/login/', Login.as_view(), name='login'),
+    path('api/token/refresh/', Refresh.as_view(), name='token_refresh'),
+    path('api/customers/', Costomer.as_view(), name='customer_list_create'),
+    path('api/sellers/', SellerListView.as_view(), name='seller_list_create'),
+    path('api/customers/find', FindCostumerByNameView.as_view(), name='find_customer_by_name'),
+    path('api/sellers/find', FindSellerByNameView.as_view(), name='find_seller_by_name'),
+]

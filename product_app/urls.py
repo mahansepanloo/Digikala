@@ -3,10 +3,14 @@ from .views import (
     ProductListCreateView, ProductDetailView,
     CategoryListCreateView, CategoryDetailView,
     CommentListCreateView, CommentDetailView,
-    RateListCreateView, RateDetailView
+    RateListCreateView, RateDetailView,
+ShowProducts,CreatProducts
 )
 
 urlpatterns = [
+    path('', ShowProducts.as_view(), name='product'),
+    path('CreatProducts', CreatProducts.as_view(), name='product'),
+
     path('products/', ProductListCreateView.as_view(), name='product-list-create'),
     path('products/<int:pk>/', ProductDetailView.as_view(), name='product-detail'),
 

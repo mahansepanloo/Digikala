@@ -2,6 +2,42 @@ from rest_framework import generics
 from .models import Product, Category, Comment, Rate
 from .serializers import ProductSerializer, CategorySerializer, CommentSerializer, RateSerializer
 from rest_framework.permissions import IsAuthenticated, IsAdminUser
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework import status
+from accounts.permissions import SellerPermissions
+
+
+
+
+
+
+
+class ShowProducts(APIView):
+    def get(self,request):
+        data = Product.objects.all()
+        datas = ProductSerializer(instance=data,many=True)
+        return Response (data=datas.data,status=status.HTTP_200_OK)
+
+
+class CreatProducts(APIView):
+    permission_classes = [SellerPermissions]
+    def post(self,request):
+        dat = ProductSerializer(data=request.data)
+        if dat.is_valid():
+            dat.save(seller=request.user.seller)
+            return Response (data =dat.data , status=status.HTTP_200_OK)
+        return Response(data=dat.errors,status=status.HTTP_400_BAD_REQUEST)
+
+
+
+
+
+
+
+
+
+
 
 class ProductListCreateView(generics.ListCreateAPIView):
     queryset = Product.objects.all()

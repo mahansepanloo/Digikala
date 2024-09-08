@@ -4,27 +4,29 @@ from accounts.models import Seller, Costumer
 
 @register(Seller)
 class Selleradmin(ModelAdmin):
-    list_display = [
-        'name',
-        'username',
-        'city'
-    ]
-    search_fields = [
-        'name',
-        'username',
-        'city'
-    ]
+    # list_display = [
+    #     'name',
+    #     'username',
+    #     'city'
+    # ]
+    # search_fields = [
+    #     'name',
+    #     'username',
+    #     'city'
+    # ]
+    pass
 
 @register(Costumer)
 class Costumeradmin(ModelAdmin):
-    list_display = [
-        'name',
-        'username',
-        'city'
-    ]
-    search_fields = [
-        'name',
-        'username',
-        'city'
-    ]
-    
+    # list_display = [
+    #     'name',
+    #     'username',
+    #     'city'
+    # ]
+    # search_fields = [
+    #     'name',
+    #     'username',
+    #     'city'
+    # ]
+    pass
+    #

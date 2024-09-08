@@ -10,6 +10,9 @@ class ProductSerializer(serializers.ModelSerializer):
     class Meta:
         model = Product
         fields = '__all__'
+        extra_kwargs = {
+            'seller': {'required': False}
+        }
 
 class CommentSerializer(serializers.ModelSerializer):
     class Meta:

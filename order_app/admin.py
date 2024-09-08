@@ -1,11 +1,11 @@
 from django.contrib.admin import register, ModelAdmin
 from django.contrib import admin
-from order_app.models import Order, Order_item
+from order_app.models import Order,OrderItem
 
 
 
 class Order_itemadmin(admin.StackedInline):
-    model = Order_item
+    model = OrderItem
 
     list_display = [
         'order',

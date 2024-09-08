@@ -1,13 +1,13 @@
-from django.http.response import JsonResponse
 from accounts.models import Costumer, Seller
-import json
-from django.views.decorators.csrf import csrf_exempt
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from .serializers import CostumerSerializer, SellerSerializer
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
-
+from rest_framework import generics
+from rest_framework.permissions import IsAdminUser
+from django_filters.rest_framework import DjangoFilterBackend
+from rest_framework import filters
 
 
 class Login(TokenObtainPairView):
@@ -18,74 +18,47 @@ class Refresh(TokenRefreshView):
 
 
 
+class Costomer(generics.ListCreateAPIView):
+    queryset = Costumer.objects.all()
+    serializer_class = CostumerSerializer
+    permission_classes = [IsAdminUser,]
 
 
-class CostumerListView(APIView):
-    def get(self, request):
-        costumers = Costumer.objects.all()
-        serializer = CostumerSerializer(costumers, many=True)
-        return Response(serializer.data)
 
-class SellerListView(APIView):
-    def get(self, request):
-        sellers = Seller.objects.all()
-        serializer = SellerSerializer(sellers, many=True)
-        return Response(serializer.data)
+class SellerListView(generics.ListCreateAPIView):
+    queryset = Costumer.objects.all()
+    serializer_class = CostumerSerializer
+    permission_classes = [IsAdminUser,]
+
 
 class FindCostumerByNameView(APIView):
-    def get(self, request, input_name):
-        costumers = Costumer.objects.filter(name=input_name)
-        serializer = CostumerSerializer(costumers, many=True)
-        return Response(serializer.data)
-
-class FindSellerByNameView(APIView):
-    def get(self, request, input_name):
-        sellers = Seller.objects.filter(name=input_name)
-        serializer = SellerSerializer(sellers, many=True)
-        return Response(serializer.data)
-
-class FindCostumerByUsernameView(APIView):
-    def get(self, request, input_username):
+    def get(self, request):
         try:
-            costumer = Costumer.objects.get(username=input_username)
-            serializer = CostumerSerializer(costumer)
-            return Response(serializer.data)
+            n = request.query_params['name']
+            name =Costumer.objects.get(name=n)
+            data = CostumerSerializer(instance=name)
+            return Response(data.data,status =status.HTTP_200_OK)
         except Costumer.DoesNotExist:
-            return Response({'error': 'Costumer not found'}, status=status.HTTP_404_NOT_FOUND)
-
-class FindSellerByUsernameView(APIView):
-    def get(self, request, input_username):
-        try:
-            seller = Seller.objects.get(username=input_username)
-            serializer = SellerSerializer(seller)
-            return Response(serializer.data)
-        except Seller.DoesNotExist:
             return Response({'error': 'Seller not found'}, status=status.HTTP_404_NOT_FOUND)
 
-class AddSellerView(APIView):
-    def post(self, request):
-        serializer = SellerSerializer(data=request.data)
-        if serializer.is_valid():
-            if Seller.objects.filter(email=serializer.validated_data['email']).exists():
-                return Response({"message": "Email already exists"}, status=status.HTTP_400_BAD_REQUEST)
-            elif Seller.objects.filter(username=serializer.validated_data['username']).exists():
-                return Response({"message": "Username already exists"}, status=status.HTTP_400_BAD_REQUEST)
-            serializer.save()
-            return Response({"message": "Seller added successfully"}, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    def post(self,request):
+        try:
+            n = request.data['name']
+            name =Costumer.objects.get(name=n)
+            data = CostumerSerializer(instance=name)
+            return Response(data.data,status =status.HTTP_200_OK)
+        except Costumer.DoesNotExist:
+            return Response({'error': 'Seller not found'}, status=status.HTTP_404_NOT_FOUND)
 
-class AddCostumerView(APIView):
-    def post(self, request):
-        serializer = CostumerSerializer(data=request.data)
-        if serializer.is_valid():
-            if Costumer.objects.filter(email=serializer.validated_data['email']).exists():
-                return Response({"message": "Email already exists"}, status=status.HTTP_400_BAD_REQUEST)
-            elif Costumer.objects.filter(username=serializer.validated_data['username']).exists():
-                return Response({"message": "Username already exists"}, status=status.HTTP_400_BAD_REQUEST)
-            serializer.save()
-            return Response({"message": "Costumer added successfully"}, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+
+class FindSellerByNameView(generics.ListAPIView):
+    queryset = Seller.objects.all()
+    serializer_class = SellerSerializer
+    filter_backends = [DjangoFilterBackend,filters.OrderingFilter,filters.SearchFilter]
+    ordering_fields = ["name"]
+    search_fields = ["username"]
+    filterset_fields = ['name',"username"]
 
 
 

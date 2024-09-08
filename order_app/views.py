@@ -1,42 +1,50 @@
-from rest_framework import generics
+from rest_framework import generics, status
+from rest_framework.response import Response
+from rest_framework.permissions import IsAdminUser, IsAuthenticated
 from .models import Discount, Order, OrderItem
 from .serializers import DiscountSerializer, OrderSerializer, OrderItemSerializer
-from rest_framework.permissions import IsAdminUser,IsAuthenticated
+from django.shortcuts import get_object_or_404
 
 class DiscountListCreateView(generics.ListCreateAPIView):
     queryset = Discount.objects.all()
     serializer_class = DiscountSerializer
-    permission_classes = [IsAuthenticated,IsAdminUser]
+    permission_classes = [IsAuthenticated, IsAdminUser]
 
 class DiscountDetailView(generics.RetrieveUpdateDestroyAPIView):
     queryset = Discount.objects.all()
     serializer_class = DiscountSerializer
-    permission_classes = [IsAuthenticated,IsAdminUser]
-
+    permission_classes = [IsAuthenticated, IsAdminUser]
 
 class OrderListCreateView(generics.ListCreateAPIView):
-    queryset = Order.objects.all()
     serializer_class = OrderSerializer
     permission_classes = [IsAuthenticated]
-    def get_queryset(self):
-        return Order.objects.filter(buyer = self.request.user.username)
 
+    def get_queryset(self):
+        return Order.objects.filter(buyer=self.request.user)
+
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save(buyer=request.user)
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
 
 class OrderDetailView(generics.RetrieveUpdateDestroyAPIView):
     queryset = Order.objects.all()
     serializer_class = OrderSerializer
     permission_classes = [IsAuthenticated]
 
-
 class OrderItemListCreateView(generics.ListCreateAPIView):
-    queryset = OrderItem.objects.all()
     serializer_class = OrderItemSerializer
     permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
-        orders = Order.objects.filter(buyer = self.request.user.username)
-        return OrderItem.objects.filter(order = orders)
+        return OrderItem.objects.filter(order__buyer=self.request.user)
 
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
 
 class OrderItemDetailView(generics.RetrieveUpdateDestroyAPIView):
     queryset = OrderItem.objects.all()
@@ -44,140 +52,49 @@ class OrderItemDetailView(generics.RetrieveUpdateDestroyAPIView):
     permission_classes = [IsAuthenticated]
 
 
+class OrderByBuyerView(generics.ListAPIView):
+    serializer_class = OrderSerializer
+    permission_classes = [IsAuthenticated]
 
+    def get_queryset(self):
+        buyer_name = self.kwargs['buyer_name']
+        return Order.objects.filter(buyer__username=buyer_name)
 
+class OrderItemBySellerView(generics.ListAPIView):
+    serializer_class = OrderItemSerializer
+    permission_classes = [IsAuthenticated]
 
+    def get_queryset(self):
+        seller_name = self.kwargs['seller_name']
+        return OrderItem.objects.filter(seller__username=seller_name)
 
+class OrderItemByProductView(generics.ListAPIView):
+    serializer_class = OrderItemSerializer
+    permission_classes = [IsAuthenticated]
 
-# def order_list_func(request):
-#     orders = Order.objects.all()
-#     orders_list = []
-#     for order in orders:
-#         order : Order
-#         order_dict = {
-#             'buyer' : order.buyer.name,
-#             'date' : order.date,
-#             'code' : order.code,
-#             'cart_code' : order.cart.code,
-#             'bill' : order.bill
-#         }
-#         orders_list.append(order_dict)
-#     return JsonResponse(orders_list,safe=False)
-#
-# def order_item_func(request):
-#     order_items = Order_item.objects.all()
-#     order_items_list = []
-#     for order_item in order_items:
-#         order_item : Order_item
-#         order_item_dict = {
-#             'order_code' : order_item.order.code,
-#             'buyer' : order_item.order.buyer.name,
-#             'seller' : order_item.seller.name,
-#             'product' : order_item.product.name,
-#             'bill' : order_item.price
-#         }
-#         order_items_list.append(order_item_dict)
-#     return JsonResponse(order_items_list, safe=False)
-#
-# def order_by_buyer(request, buyer_name):
-#     try:
-#         orders = Order.objects.filter(buyer__name = buyer_name)
-#         orders_list = []
-#         for order in orders:
-#             order : Order
-#             order_dict = {
-#                 'buyer' : order.buyer.name,
-#                 'date' : order.date,
-#                 'code' : order.code,
-#                 'cart_code' : order.cart.code,
-#                 'bill' : order.bill
-#             }
-#             orders_list.append(order_dict)
-#         return JsonResponse(orders_list,safe=False)
-#     except Order.DoesNotExist:
-#         return JsonResponse({'error' : 'order not found'})
-#
-# def order_item_by_seller(request, seller_name):
-#     try:
-#         orders = Order_item.objects.filter(seller__name = seller_name)
-#         orders_list = []
-#         for order_item in orders:
-#             order_item : Order_item
-#             order_dict = {
-#                 'order_code' : order_item.order.code,
-#                 'buyer' : order_item.order.buyer.name,
-#                 'seller' : order_item.seller.name,
-#                 'product' : order_item.product.name,
-#                 'bill' : order_item.price
-#             }
-#             orders_list.append(order_dict)
-#         return JsonResponse(orders_list,safe=False)
-#     except Order.DoesNotExist:
-#         return JsonResponse({'error' : 'order not found'})
-#
-# def order_item_by_product(request, product_name):
-#     order_items = Order_item.objects.filter(product__name = product_name)
-#     order_items_list = []
-#     for order_item in order_items:
-#         order_item : Order_item
-#         order_item_dict = {
-#             'order_code' : order_item.order.code,
-#             'buyer' : order_item.order.buyer.name,
-#             'product' : order_item.product.name,
-#             'bill' : order_item.price
-#         }
-#         order_items_list.append(order_item_dict)
-#     return JsonResponse(order_items_list, safe=False)
-#
-# def order_by_code(request, code_input):
-#     try:
-#         order = Order.objects.get(code = code_input)
-#         order_dict = {
-#                 'buyer' : order.buyer.name,
-#                 'date' : order.date,
-#                 'code' : order.code,
-#                 'cart_code' : order.cart.code,
-#                 'bill' : order.bill
-#             }
-#         return JsonResponse(order_dict, safe=False)
-#     except Order.DoesNotExist:
-#         return JsonResponse({'error' : 'that order code does not exist'})
-#
-#
-#
-#
-# def create_order_view(request):
-#     if request.method == 'POST':
-#         data = json.loads(request.body)
-#
-#         buyer = Costumer.objects.get(name=data['buyer_name'])
-#
-#         cart = Cart.objects.get(code=data['cart_code'])
-#
-#         discount_code = Discount.objects.get(code=data['discount_code']) if 'discount_code' in data else None
-#
-#         order = Order.objects.create(
-#             buyer=buyer,
-#             cart=cart,
-#             discount_code=discount_code,
-#             bill=data.get('bill', 0.0),
-#             code=data.get('code', None)
-#         )
-#
-#         return JsonResponse({'message': 'Order created successfully', 'order_code': order.code})
-#
-#     return JsonResponse({'error': 'Invalid request method'})
-#
-#
-# def delete_order_view(request, order_code):
-#     if request.method == 'DELETE':
-#         try:
-#             order = Order.objects.get(code=order_code)
-#             order.delete()
-#             return JsonResponse({'message': 'Order deleted successfully'})
-#         except Order.DoesNotExist:
-#             return JsonResponse({'error': 'Order not found'})
-#     return JsonResponse({'error': 'Invalid request method'})
-#
-#
-#
+    def get_queryset(self):
+        product_name = self.kwargs['product_name']
+        return OrderItem.objects.filter(product__name=product_name)
+
+class OrderByCodeView(generics.RetrieveAPIView):
+    serializer_class = OrderSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_object(self):
+        code_input = self.kwargs['code_input']
+        return get_object_or_404(Order, code=code_input)
+
+class CreateOrderView(generics.CreateAPIView):
+    serializer_class = OrderSerializer
+    permission_classes = [IsAuthenticated]
+
+    def perform_create(self, serializer):
+        serializer.save(buyer=self.request.user)
+
+class DeleteOrderView(generics.DestroyAPIView):
+    queryset = Order.objects.all()
+    permission_classes = [IsAuthenticated]
+
+    def get_object(self):
+        order_code = self.kwargs['order_code']
+        return get_object_or_404(Order, code=order_code)
