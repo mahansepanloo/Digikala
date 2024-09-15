@@ -21,14 +21,15 @@ class Refresh(TokenRefreshView):
 class Costomer(generics.ListCreateAPIView):
     queryset = Costumer.objects.all()
     serializer_class = CostumerSerializer
-    permission_classes = [IsAdminUser,]
+
 
 
 
 class SellerListView(generics.ListCreateAPIView):
     queryset = Costumer.objects.all()
     serializer_class = CostumerSerializer
-    permission_classes = [IsAdminUser,]
+
+
 
 
 class FindCostumerByNameView(APIView):

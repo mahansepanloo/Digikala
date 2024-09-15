@@ -20,20 +20,6 @@ class ShowProducts(APIView):
         return Response (data=datas.data,status=status.HTTP_200_OK)
 
 
-class CreatProducts(APIView):
-    permission_classes = [SellerPermissions]
-    def post(self,request):
-        dat = ProductSerializer(data=request.data)
-        if dat.is_valid():
-            dat.save(seller=request.user.seller)
-            return Response (data =dat.data , status=status.HTTP_200_OK)
-        return Response(data=dat.errors,status=status.HTTP_400_BAD_REQUEST)
-
-
-
-
-
-
 
 
 
@@ -42,22 +28,52 @@ class CreatProducts(APIView):
 class ProductListCreateView(generics.ListCreateAPIView):
     queryset = Product.objects.all()
     serializer_class = ProductSerializer
-    permission_classes = [IsAuthenticated]
+    filter_backends = [DjangoFilterBackend, filters.OrderingFilter, filters.SearchFilter]
+    ordering_fields = ["name"]
+    search_fields = ["username"]
+    filterset_fields = ['name', "username"]
+
+
+    def perform_create(self, serializer):
+        return serializer.save(seller=self.request.user)
+    def get_permissions(self):
+        if self.request.method == "POST":
+            self.permission_classes = [IsAuthenticated]
+        return super(TerminalView, self).get_permissions()
+
+
+
+
+
+
+
+
+
+
+
+
 
 class ProductDetailView(generics.RetrieveUpdateDestroyAPIView):
     queryset = Product.objects.all()
     serializer_class = ProductSerializer
 
+
 class CategoryListCreateView(generics.ListCreateAPIView):
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
-    permission_classes = [IsAuthenticated, IsAdminUser]
+
+    def get_permissions(self):
+        if request.method == "POST":
+            self.permission_classes = [IsAuthenticated, IsAdminUser]
 
 
 class CategoryDetailView(generics.RetrieveUpdateDestroyAPIView):
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
-    permission_classes = [IsAuthenticated, IsAdminUser]
+
+    def get_permissions(self):
+        if request.method == "PUT" or request.method == "DELETE":
+            self.permission_classes = [IsAuthenticated, IsAdminUser]
 
 
 class CommentListCreateView(generics.ListCreateAPIView):
